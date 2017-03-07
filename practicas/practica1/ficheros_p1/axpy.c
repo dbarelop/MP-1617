@@ -221,7 +221,7 @@ int axpy_intr_SSE()
 
 #else
   __m128d vX,vY;
-  __m128 valpha, vaX;
+  __m128d valpha, vaX;
   for (int nl = 0; nl < NTIMES; nl++) {
     valpha = _mm_set1_pd(alpha);
     //valpha = _mm_load1_pd(&alpha);
@@ -265,7 +265,7 @@ int axpy_intr_AVX()
   }
 #else
   __m256d vX, vY;
-  __m256 valpha, vaX;
+  __m256d valpha, vaX;
   for (int nl = 0; nl < NTIMES; nl++) {
     valpha = _mm256_set1_pd(alpha);
     for (int i = 0; i < LEN; i += AVX_LEN) {
