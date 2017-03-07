@@ -6,7 +6,7 @@
 % Barea López, Daniel
 % 23-febrero-2017
 
-### Tiempo dedicado (aproximado): 3 horas
+### Tiempo dedicado (aproximado): 4 horas
 
 ## Plataforma de trabajo
 
@@ -173,7 +173,9 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
 
     La única diferencia (en el código C) es que el bucle más interno itera dando saltos de `AVX_LEN` elementos (`for (int i = 0; i < LEN; i += AVX_LEN)`), mientras que el de la versión automática itera todos los elementos (`for (int i = 0; i < LEN; i++)`). En la versión automática, el compilador se encarga de ajustar los índices del bucle automáticamente, mientras que en la manual se debe ajustar a mano.
 
-10. **Análisis para vectores con elementos de doble precisión:**
+## Parte 3. Parte optativa
+
+9. **Análisis para vectores con elementos de doble precisión:**
 
     Se han repetido los cálculos para elementos de doble precisión y los resultados son los siguientes (todos los *checksums* coinciden de nuevo):
 
@@ -189,5 +191,31 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
 
     La diferencia en el código generado para las versiones AVX y AVX+FMA es que se usan las versiones de doble precisión de las instrucciones del repertorio (`vaddpd` en lugar de `vaddps`, `vmuld` en lugar de `vmuls`, `vfmadd213pd` en lugar de `vfmadd213ps`, etc.).
 
+10. **Análisis del rendimiento para diferentes tamaños de vector**
+
+    Para la función `axpy` se analizan vectores de diferentes tamaños (el speedup es en todos los casos en función del tiempo de ejecución de la versión escalar con 2000 elementos):
+
+     Núm. elementos   Versión   Tiempo ejec   Speedup   GFLOPS
+    ---------------- --------- ------------- --------- --------
+     2000             No AVX    5.01          1.000     0.399
+     4000             No AVX    5.23          0.958     0.765
+     8000             No AVX    5.20          1.538     1.538
+     16000            No AVX    5.23          0.958     3.059
+     2000             AVX       0.76          6.592     2.632
+     4000             AVX       0.75          6.680     5.333
+     8000             AVX       1.62          3.093     4.938
+     16000            AVX       1.68          2.982     9.524
+     2000             AVX+FMA   0.65          7.708     3.077
+     4000             AVX+FMA   0.63          7.952     6.349
+     8000             AVX+FMA   1.61          3.112     4.969
+     16000            AVX+FMA   1.61          3.112     9.938
+
+    El rendimiento mejora bastante al aumentar el tamaño de vector. Sin embargo, no se han observado una diferencia notable en el tiempo de ejecución (en algunos casos, incluso disminuye al aumentar el número de elementos del vector), por lo que es posible que haya algún error en las mediciones.
+
+    \ ![Speedups de las diferentes versiones con distintos tamaños de vector](speedups.png)
+
+    \ ![GFLOPS de las diferentes versiones con distintos tamaños de vector](gflops.png)
 
 ## Referencias
+
+* [Intel Intrinsics Guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/)
