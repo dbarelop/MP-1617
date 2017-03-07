@@ -10,7 +10,7 @@
 
 ## Plataforma de trabajo
 
-Se han realizado las pruebas sobre la máquina `lab102-194`:
+Se han realizado las pruebas sobre la máquina `lab004-071`:
 
 * **CPU:** Intel i5-4570 (soporta las extensiones SSE4.1/4.2 y AVX 2.0)
 * **SO:** CentOS 6, kernel 2.6.32
@@ -126,7 +126,7 @@ Se han realizado las pruebas sobre la máquina `lab102-194`:
      Versión   Tiempo ejec   Speedup   GFLOPS
     --------- ------------- --------- --------
      No AVX    5.01          1.0       0.399
-     AVX       0.77          6.506     2.597
+     AVX       0.76          6.592     2.632
      AVX+FMA   0.65          7.708     3.077
 
     La versión escalar es claramente la perdedora de la comparación, mientras que la que mejor resultado obtiene es la versión AVX+FMA. Los *checksums* de todas las versiones coinciden.

@@ -20,11 +20,11 @@
  * and the object file is linked to this file to compile it
  *
  *  The output includes five columns:
- *	Loop:		The name of the loop
- *	Time(Sec): 	The time in seconds to run the loop
- *	ps/it: 	    picoseconds per loop iteration
- *	FLOPs per cycle: Number of flops per cycle
- *	Checksum:	The checksum calculated when the test has run
+ *  Loop:       The name of the loop
+ *  Time(Sec):  The time in seconds to run the loop
+ *  ps/it:      picoseconds per loop iteration
+ *  FLOPs per cycle: Number of flops per cycle
+ *  Checksum:   The checksum calculated when the test has run
  *
  *
  * 2014-05: adapted by
@@ -250,9 +250,33 @@ int axpy_intr_AVX()
   start_t = get_wall_time();
 
 #if PRECISION==0
-
+  __m256 vX, vY;
+  __m256 valpha, vaX;
+  for (int nl = 0; nl < NTIMES; nl++) {
+    valpha = _mm256_set1_ps(alpha);
+    for (int i = 0; i < LEN; i += AVX_LEN) {
+        vX = _mm256_load_ps(&x[i]);
+        vY = _mm256_load_ps(&y[i]);
+        vaX = _mm256_mul_ps(valpha, vX);
+        vY = _mm256_add_ps(vaX, vY);
+        _mm256_store_ps(&y[i], vY);
+    }
+    dummy(x, y, z, alpha);
+  }
 #else
-
+  __m256d vX, vY;
+  __m256 valpha, vaX;
+  for (int nl = 0; nl < NTIMES; nl++) {
+    valpha = _mm256_set1_pd(alpha);
+    for (int i = 0; i < LEN; i += AVX_LEN) {
+      vX = _mm256_load_pd(&x[i]);
+      vY = _mm256_load_pd(&y[i]);
+      vaX = _mm256_mul_pd(valpha, vX);
+      vY = _mm256_add_pd(vaX, vY);
+      _mm256_store_pd(&y[i], vY);
+    }
+    dummy(x, y, z, alpha);
+  }
 #endif
 
   end_t = get_wall_time(); wall_dif = end_t - start_t;
