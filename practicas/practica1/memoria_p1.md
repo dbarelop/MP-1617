@@ -30,7 +30,6 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
       400be0:   vmovss 0x2014a0(%rip),%xmm0        # 602088 <alpha>
       400be8:   xor    %eax,%eax
       400bea:   nopw   0x0(%rax,%rax,1)
-          y[i] = alpha*x[i] + y[i];
       400bf0:   vmulss 0x604100(%rax),%xmm0,%xmm1
       400bf8:   add    $0x4,%rax
       400bfc:   vaddss 0x6060fc(%rax),%xmm1,%xmm1
@@ -55,7 +54,6 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
           400bf8:   xor    %eax,%eax
           400bfa:   vbroadcastss %xmm0,%ymm2
           400bff:   nop
-              y[i] = alpha*x[i] + y[i];
           400c00:   vmulps 0x604100(%rax),%ymm2,%ymm1
           400c08:   add    $0x20,%rax
           400c0c:   vaddps 0x6060e0(%rax),%ymm1,%ymm1
@@ -78,7 +76,6 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
           400c08:   xor    %eax,%eax
           400c0a:   vbroadcastss %xmm0,%ymm2
           400c0f:   nop
-              y[i] = alpha*x[i] + y[i];
           400c10:   vmovaps 0x604100(%rax),%ymm1
           400c18:   add    $0x20,%rax
           400c1c:   vfmadd213ps 0x6060e0(%rax),%ymm2,%ymm1
@@ -100,7 +97,6 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
           400bf0:   vmovss 0x201490(%rip),%xmm0        # 602088 <alpha>
           400bf8:   xor    %eax,%eax
           400bfa:   vbroadcastss %xmm0,%zmm2
-              y[i] = alpha*x[i] + y[i];
           400c00:   vmulps 0x604100(%rax),%zmm2,%zmm1
           400c0a:   add    $0x40,%rax
           400c0e:   vaddps 0x6060c0(%rax),%zmm1,%zmm1
@@ -138,5 +134,21 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
     Los informes del compilador no indican haber vectorizado el bucle en `axpy_intr_SSE()`.
 
 8. **Escribir una nueva versión del bucle `axpy_intr_AVX()` vectorizando de forma manual con intrínsecos AVX. Análisis del código generado:**
+
+    ```
+      400d3b:   vmovsd %xmm0,-0x18(%rbp)
+      400d40:   vmovss 0x201340(%rip),%xmm0        # 602088 <alpha>
+      400d48:   xor    %eax,%eax
+      400d4a:   vbroadcastss %xmm0,%ymm2
+      400d4f:   nop
+      400d50:   vmulps 0x604100(%rax),%ymm2,%ymm1
+      400d58:   add    $0x20,%rax
+      400d5c:   vaddps 0x6060e0(%rax),%ymm1,%ymm1
+      400d64:   vmovaps %ymm1,0x6060e0(%rax)
+    ```
+
+    El código generado vectorizando de forma manual con los intrínsecos AVX es idéntico al generado automáticamente.
+
+    La única diferencia (en el código C) es que el bucle más interno itera dando saltos de `AVX_LEN` elementos (`for (int i = 0; i < LEN; i += AVX_LEN)`), mientras que el de la versión automática itera todos los elementos (`for (int i = 0; i < LEN; i++)`). En la versión automática, el compilador se encarga de ajustar los índices del bucle automáticamente, mientras que en la manual se debe ajustar a mano.
 
 ## Referencias
