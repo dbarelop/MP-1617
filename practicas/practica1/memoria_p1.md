@@ -119,6 +119,8 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
 
 6. **Cálculo de métricas de ejecución:**
 
+    Al ejecutar las diferentes versiones se producen los siguientes resultados:
+
      Versión   Tiempo ejec   Speedup   GFLOPS
     --------- ------------- --------- --------
      No AVX    5.01          1.0       0.399
@@ -135,6 +137,26 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
 
 8. **Escribir una nueva versión del bucle `axpy_intr_AVX()` vectorizando de forma manual con intrínsecos AVX. Análisis del código generado:**
 
+    Para elementos de precisión simple, el código en C que se ha escrito es el siguiente:
+
+    ```
+    __m256 vX, vY;
+    __m256 valpha, vaX;
+    for (int nl = 0; nl < NTIMES; nl++) {
+      valpha = _mm256_set1_ps(alpha);
+      for (int i = 0; i < LEN; i += AVX_LEN) {
+          vX = _mm256_load_ps(&x[i]);
+          vY = _mm256_load_ps(&y[i]);
+          vaX = _mm256_mul_ps(valpha, vX);
+          vY = _mm256_add_ps(vaX, vY);
+          _mm256_store_ps(&y[i], vY);
+      }
+      dummy(x, y, z, alpha);
+    }
+    ```
+
+    El desensamblado resultante de ese código corresponde a:
+
     ```
       400d3b:   vmovsd %xmm0,-0x18(%rbp)
       400d40:   vmovss 0x201340(%rip),%xmm0        # 602088 <alpha>
@@ -150,5 +172,22 @@ Se han realizado las pruebas sobre la máquina `lab004-071`:
     El código generado vectorizando de forma manual con los intrínsecos AVX es idéntico al generado automáticamente.
 
     La única diferencia (en el código C) es que el bucle más interno itera dando saltos de `AVX_LEN` elementos (`for (int i = 0; i < LEN; i += AVX_LEN)`), mientras que el de la versión automática itera todos los elementos (`for (int i = 0; i < LEN; i++)`). En la versión automática, el compilador se encarga de ajustar los índices del bucle automáticamente, mientras que en la manual se debe ajustar a mano.
+
+10. **Análisis para vectores con elementos de doble precisión:**
+
+    Se han repetido los cálculos para elementos de doble precisión y los resultados son los siguientes (todos los *checksums* coinciden de nuevo):
+
+     Versión   Tiempo ejec   Speedup   GFLOPS
+    --------- ------------- --------- --------
+     No AVX    5.08          1.0       0.394
+     AVX       1.50          3.387     1.333
+     AVX+FMA   1.25          4.064     1.600
+
+    Como se puede apreciar, el *speedup* obtenido al usar las extensiones vectoriales ha disminuido casi a la mitad, tanto en la versión AVX como en la AVX+FMA. La versión escalar, sin embargo, no ha modificado prácticamente su tiempo de ejecución. Esto se debe a que el procesador tarda lo mismo en realizar una operación sobre un elemento de 4 u 8 bytes, pero no puede procesar más de 32 bytes a la vez.
+
+    En este caso, las extensiones vectoriales trabajan en cada iteración con vectores de **4 elementos** de **8 bytes** (**32 bytes/iteración**).
+
+    La diferencia en el código generado para las versiones AVX y AVX+FMA es que se usan las versiones de doble precisión de las instrucciones del repertorio (`vaddpd` en lugar de `vaddps`, `vmuld` en lugar de `vmuls`, `vfmadd213pd` en lugar de `vfmadd213ps`, etc.).
+
 
 ## Referencias
