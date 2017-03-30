@@ -1,0 +1,49 @@
+# Makefile para compilar los distintos fuentes de la práctuca.
+# To compile the program, just type make in the sample directory.
+# 
+# Junaed Sattar
+# October 30, 2005.
+
+CC=icc
+FLAGS=-std=c11 -g -O3 -xHost -Wall    #FLAGS=-std=c99
+REPORT_FLAGS=-qopt-report-phase=vec
+
+#
+# The -ljpeg flag is used to tell the compiler to use the libjpeg library to compile and link
+# your program against. If omitted, you will get a few "unresolved symbol" errors.
+#
+# 
+
+all: test_convert test 
+
+jpeg_handler.o: jpeg_handler.c
+	$(CC) $(FLAGS)  -c jpeg_handler.c -o jpeg_handler.o 
+
+dummy.o: dummy.c
+	$(CC) $(FLAGS)  -c dummy.c -o dummy.o 
+
+convert.o: convert.c
+	$(CC)  $(FLAGS)  $(REPORT_FLAGS)  -c convert.c  -o convert.o \
+      -Wa,-adghln=assembler/convert.$(CC).s \
+	  > reports/convert.$(CC).report.txt  2>&1
+
+scale.o: scale.c
+	$(CC)  $(FLAGS)  $(REPORT_FLAGS)  -c scale.c  -o scale.o \
+      -Wa,-adghln=assembler/scale.$(CC).s \
+	  > reports/scale.$(CC).report.txt  2>&1
+
+#flip.o: flip.c
+#	$(CC)  $(FLAGS)  $(REPORT_FLAGS)  -c flip.c  -o flip.o \
+#	  > flip.$(CC).report.txt  2>&1
+
+test_convert: convert.o jpeg_handler.o dummy.o  test_convert.c
+	$(CC) $(FLAGS)  jpeg_handler.o convert.o dummy.o test_convert.c -Llib -ljpeg  -o test_convert.icc
+
+test: jpeg_handler.o convert.o scale.o dummy.o test.c
+	$(CC)  $(FLAGS)  jpeg_handler.o convert.o scale.o dummy.o test.c -Llib -ljpeg  -o test.icc
+
+#test_flip: flip.o jpeg_handler.o test_flip.c
+#	$(CC) $(FLAGS)  jpeg_handler.o flip.o test_flip.c -Llib -ljpeg  -o test_flip
+
+clean:
+	rm -rf *.o test.icc test_convert.icc test_flip
