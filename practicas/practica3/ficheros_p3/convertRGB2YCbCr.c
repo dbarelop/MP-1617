@@ -63,7 +63,6 @@ convertRGB2YCbCr_v1(image_t * image_in, image_t * image_out)
     {
         for (int i=0; i<height*width; i++)
         {
-            /* COMPLETAR, MODIFICAR ... */
             /* R */
             image_out->pixels[3*i + 0] = (unsigned char)
                (RGB2YCbCr_offset[0] +
@@ -71,9 +70,17 @@ convertRGB2YCbCr_v1(image_t * image_in, image_t * image_out)
                 RGB2YCbCr[0][1]*image_in->pixels[3*i + 1] + 
                 RGB2YCbCr[0][2]*image_in->pixels[3*i + 2]);
             /* G */
-            /* ... = ... */
+            image_out->pixels[3*i + 1] = (unsigned char)
+               (RGB2YCbCr_offset[1] +
+                RGB2YCbCr[1][0]*image_in->pixels[3*i + 0] + 
+                RGB2YCbCr[1][1]*image_in->pixels[3*i + 1] + 
+                RGB2YCbCr[1][2]*image_in->pixels[3*i + 2]);
             /* B */
-            /* ... = ... */
+            image_out->pixels[3*i + 2] = (unsigned char)
+               (RGB2YCbCr_offset[2] +
+                RGB2YCbCr[2][0]*image_in->pixels[3*i + 0] + 
+                RGB2YCbCr[2][1]*image_in->pixels[3*i + 1] + 
+                RGB2YCbCr[2][2]*image_in->pixels[3*i + 2]);
         }
         dummy(image_in, image_out);
     }
@@ -85,11 +92,17 @@ convertRGB2YCbCr_v1(image_t * image_in, image_t * image_out)
 
 
 void
-convertRGB2YCbCr_v2(image_t * image_in, image_t * image_out)
+convertRGB2YCbCr_v2(image_t * restrict image_in, image_t * restrict image_out)
 {
     double start_t, end_t, wall_dif;
     const int height = image_in->height;
     const int width =  image_in->width;
+    float *tmpR = (float *) malloc(sizeof(float) * height * width);
+    float *tmpG = (float *) malloc(sizeof(float) * height * width);
+    float *tmpB = (float *) malloc(sizeof(float) * height * width);
+    float *constantsR = (float *) malloc(sizeof(float) * 3 * height * width);
+    float *constantsG = (float *) malloc(sizeof(float) * 3 * height * width);
+    float *constantsB = (float *) malloc(sizeof(float) * 3 * height * width);
 
     if (image_in->bytes_per_pixel != 3)
     {
@@ -107,22 +120,42 @@ convertRGB2YCbCr_v2(image_t * image_in, image_t * image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        for (int i=0; i<height*width; i++)
+        /* R */
+        for (int i=0; i<height*width; i++)  // VECTORIZADO
         {
-            /* COMPLETAR, MODIFICAR ... */
-            /* R */
-            image_out->pixels[3*i + 0] = (unsigned char)
-               (RGB2YCbCr_offset[0] +
-                RGB2YCbCr[0][0]*image_in->pixels[3*i + 0] + 
-                RGB2YCbCr[0][1]*image_in->pixels[3*i + 1] + 
-                RGB2YCbCr[0][2]*image_in->pixels[3*i + 2]);
-            /* G */
-            /* ... = ... */
-            /* B */
-            /* ... = ... */
+            tmpR[i] = RGB2YCbCr_offset[0] + 
+                      RGB2YCbCr[0][0]*image_in->pixels[3*i + 0] + 
+                      RGB2YCbCr[0][1]*image_in->pixels[3*i + 1] + 
+                      RGB2YCbCr[0][2]*image_in->pixels[3*i + 2];
+        }
+        /* G */
+        for (int i=0; i<height*width; i++)  // VECTORIZADO
+        {
+            tmpG[i] = RGB2YCbCr_offset[1] + 
+                      RGB2YCbCr[1][0]*image_in->pixels[3*i + 0] + 
+                      RGB2YCbCr[1][1]*image_in->pixels[3*i + 1] + 
+                      RGB2YCbCr[1][2]*image_in->pixels[3*i + 2];
+        }
+        /* B */
+        for (int i=0; i<height*width; i++)  // VECTORIZADO
+        {
+            tmpB[i] = RGB2YCbCr_offset[2] + 
+                      RGB2YCbCr[2][0]*image_in->pixels[3*i + 0] + 
+                      RGB2YCbCr[2][1]*image_in->pixels[3*i + 1] + 
+                      RGB2YCbCr[2][2]*image_in->pixels[3*i + 2];
+        }
+        /* Combinar resultados en los píxeles de image_out */
+        for (int i=0; i<height*width; i++)  // VECTORIZED
+        {
+            image_out->pixels[3*i + 0] = (unsigned char) tmpR[i];
+            image_out->pixels[3*i + 1] = (unsigned char) tmpG[i];
+            image_out->pixels[3*i + 2] = (unsigned char) tmpB[i];
         }
         dummy(image_in, image_out);
     }
+    free(tmpR);
+    free(tmpG);
+    free(tmpB);
 
     end_t = get_wall_time(); wall_dif = end_t - start_t;
     results(wall_dif, height, width, "RGB2YCbCr_v2()");
@@ -162,13 +195,11 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
     Crpixels = (unsigned char*) malloc(width*height);
 
     /* transformación AoS -> SoA */
-    /* COMPLETAR ... */
     for (int i=0; i<height*width; i++)
     {
-        /*
-        Rpixels[i] = ...;
-        Gpixels[i] = ...; 
-        Bpixels[i] = ...; */
+        Rpixels[i] = image_in->pixels[3*i + 0];
+        Gpixels[i] = image_in->pixels[3*i + 1];
+        Bpixels[i] = image_in->pixels[3*i + 2];
     }
 
     start_t = get_wall_time();
