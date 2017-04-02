@@ -100,9 +100,6 @@ convertRGB2YCbCr_v2(image_t * restrict image_in, image_t * restrict image_out)
     float *tmpR = (float *) malloc(sizeof(float) * height * width);
     float *tmpG = (float *) malloc(sizeof(float) * height * width);
     float *tmpB = (float *) malloc(sizeof(float) * height * width);
-    float *constantsR = (float *) malloc(sizeof(float) * 3 * height * width);
-    float *constantsG = (float *) malloc(sizeof(float) * 3 * height * width);
-    float *constantsB = (float *) malloc(sizeof(float) * 3 * height * width);
 
     if (image_in->bytes_per_pixel != 3)
     {
@@ -120,32 +117,27 @@ convertRGB2YCbCr_v2(image_t * restrict image_in, image_t * restrict image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        /* R */
+        /* Calcular píxeles */
         for (int i=0; i<height*width; i++)  // VECTORIZADO
         {
+            /* R */
             tmpR[i] = RGB2YCbCr_offset[0] + 
                       RGB2YCbCr[0][0]*image_in->pixels[3*i + 0] + 
                       RGB2YCbCr[0][1]*image_in->pixels[3*i + 1] + 
                       RGB2YCbCr[0][2]*image_in->pixels[3*i + 2];
-        }
-        /* G */
-        for (int i=0; i<height*width; i++)  // VECTORIZADO
-        {
+            /* G */
             tmpG[i] = RGB2YCbCr_offset[1] + 
                       RGB2YCbCr[1][0]*image_in->pixels[3*i + 0] + 
                       RGB2YCbCr[1][1]*image_in->pixels[3*i + 1] + 
                       RGB2YCbCr[1][2]*image_in->pixels[3*i + 2];
-        }
-        /* B */
-        for (int i=0; i<height*width; i++)  // VECTORIZADO
-        {
+            /* B */
             tmpB[i] = RGB2YCbCr_offset[2] + 
                       RGB2YCbCr[2][0]*image_in->pixels[3*i + 0] + 
                       RGB2YCbCr[2][1]*image_in->pixels[3*i + 1] + 
                       RGB2YCbCr[2][2]*image_in->pixels[3*i + 2];
         }
         /* Combinar resultados en los píxeles de image_out */
-        for (int i=0; i<height*width; i++)  // VECTORIZED
+        for (int i=0; i<height*width; i++)  // VECTORIZADO
         {
             image_out->pixels[3*i + 0] = (unsigned char) tmpR[i];
             image_out->pixels[3*i + 1] = (unsigned char) tmpG[i];
@@ -206,13 +198,26 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        /* COMPLETAR ... */
-        for (int i=0; i<height*width; i++)
+        for (int i=0; i<height*width; i++)  // VECTORIZADO
         {
             /* R */
-            // Ypixels[i] = f(Rpixels[i], Gpixels[i], Bpixels[i]);
+            Ypixels[i] = (unsigned char) 
+                (RGB2YCbCr_offset[0] + 
+                 RGB2YCbCr[0][0]*Rpixels[i] + 
+                 RGB2YCbCr[0][1]*Gpixels[i] + 
+                 RGB2YCbCr[0][2]*Bpixels[i]);
             /* G */
+            Cbpixels[i] = (unsigned char) 
+                (RGB2YCbCr_offset[1] + 
+                 RGB2YCbCr[1][0]*Rpixels[i] + 
+                 RGB2YCbCr[1][1]*Gpixels[i] + 
+                 RGB2YCbCr[1][2]*Bpixels[i]);
             /* B */
+            Crpixels[i] = (unsigned char) 
+                (RGB2YCbCr_offset[2] + 
+                 RGB2YCbCr[2][0]*Rpixels[i] + 
+                 RGB2YCbCr[2][1]*Gpixels[i] + 
+                 RGB2YCbCr[2][2]*Bpixels[i]);
         }
         dummy(image_in, image_out);
     }
@@ -221,17 +226,16 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
     results(wall_dif, height, width, "RGB2YCbCrSOA1()");
 
     /* transformación SoA -> AoS */
-    /* COMPLETAR ... */
     for (int i=0; i<height*width; i++)
     {
-        // = Ypixels[i];
-        // = Cbpixels[i];
-        // = Crpixels[i];
+        image_out->pixels[3*i + 0] = Ypixels[i];
+        image_out->pixels[3*i + 1] = Cbpixels[i];
+        image_out->pixels[3*i + 2] = Crpixels[i];
     }
 }
 //----------------------------------------------------------------------------
 
-#define BLOCK 64
+#define BLOCK 1024*8
 
  /* función que entrelaza la transformación de los datos con los cálculos a realizar.
     De esta forma, en lugar de necesitar nuevas variables
@@ -266,29 +270,43 @@ convertRGB2YCbCr_block(image_t * image_in, image_t * image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        /* COMPLETAR, MODIFICAR ... */
-        for (int i=0; i<height*width; i++ /* esto hay que cambiarlo */)
+        for (int i=0; i<height*width; i += BLOCK)
         {
             /* transformación AoS -> SoA */
             for (int j=0; j<BLOCK; j++)
             {
-                // Rpixels[j] = ...;
-                // Gpixels[j] = ...;
-                // Bpixels[j] = ...;
+                Rpixels[j] = image_in->pixels[i + 3*j + 0];
+                Gpixels[j] = image_in->pixels[i + 3*j + 1];
+                Bpixels[j] = image_in->pixels[i + 3*j + 2];
             }
             /* conversión RGB -> YbCrCb */
             for (int j=0; j<BLOCK; j++)
             {
-                // Ypixels[j]  = f(Rpixels[j], Gpixels[j], Bpixels[j]);
-                // Cbpixels[j] = f(Rpixels[j], Gpixels[j], Bpixels[j]);
-                // Crpixels[j] = f(Rpixels[j], Gpixels[j], Bpixels[j]);
+                /* R */
+                Ypixels[j] = (unsigned char) 
+                    (RGB2YCbCr_offset[0] + 
+                     RGB2YCbCr[0][0]*Rpixels[j] + 
+                     RGB2YCbCr[0][1]*Gpixels[j] + 
+                     RGB2YCbCr[0][2]*Bpixels[j]);
+                /* G */
+                Cbpixels[j] = (unsigned char) 
+                    (RGB2YCbCr_offset[1] + 
+                     RGB2YCbCr[1][0]*Rpixels[j] + 
+                     RGB2YCbCr[1][1]*Gpixels[j] + 
+                     RGB2YCbCr[1][2]*Bpixels[j]);
+                /* B */
+                Crpixels[j] = (unsigned char) 
+                    (RGB2YCbCr_offset[2] + 
+                     RGB2YCbCr[2][0]*Rpixels[j] + 
+                     RGB2YCbCr[2][1]*Gpixels[j] + 
+                     RGB2YCbCr[2][2]*Bpixels[j]);
             }
             /* transformación SoA -> AoS */
             for (int j=0; j<BLOCK; j++)
             {
-                // ... = Ypixels[j];
-                // ... = Cbpixels[j];
-                // ... = Crpixels[j];
+                image_out->pixels[i + 3*j + 0] = Ypixels[j];
+                image_out->pixels[i + 3*j + 1] = Cbpixels[j];
+                image_out->pixels[i + 3*j + 2] = Crpixels[j];
             }
         }
         dummy(image_in, image_out);
