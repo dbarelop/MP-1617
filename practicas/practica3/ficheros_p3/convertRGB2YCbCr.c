@@ -235,7 +235,7 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
 }
 //----------------------------------------------------------------------------
 
-#define BLOCK 1024*8
+#define BLOCK 1024
 
  /* función que entrelaza la transformación de los datos con los cálculos a realizar.
     De esta forma, en lugar de necesitar nuevas variables
@@ -270,7 +270,7 @@ convertRGB2YCbCr_block(image_t * image_in, image_t * image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        for (int i=0; i<height*width; i += BLOCK)
+        for (int i=0; i<3*height*width; i += 3*BLOCK)
         {
             /* transformación AoS -> SoA */
             for (int j=0; j<BLOCK; j++)
