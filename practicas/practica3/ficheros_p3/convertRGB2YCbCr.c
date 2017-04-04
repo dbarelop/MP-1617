@@ -137,7 +137,7 @@ convertRGB2YCbCr_v2(image_t * restrict image_in, image_t * restrict image_out)
                       RGB2YCbCr[2][2]*image_in->pixels[3*i + 2];
         }
         /* Combinar resultados en los píxeles de image_out */
-        for (int i=0; i<height*width; i++)  // VECTORIZADO
+        for (int i=0; i<height*width; i++)
         {
             image_out->pixels[3*i + 0] = (unsigned char) tmpR[i];
             image_out->pixels[3*i + 1] = (unsigned char) tmpG[i];
@@ -187,7 +187,7 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
     Crpixels = (unsigned char*) malloc(width*height);
 
     /* transformación AoS -> SoA */
-    for (int i=0; i<height*width; i++)
+    for (int i=0; i<height*width; i++)     // VECTORIZADO
     {
         Rpixels[i] = image_in->pixels[3*i + 0];
         Gpixels[i] = image_in->pixels[3*i + 1];
@@ -198,7 +198,7 @@ convertRGB2YCbCr_SOA1(image_t * restrict image_in, image_t * restrict image_out)
 
     for (int it=0; it<NITER; it++)
     {
-        for (int i=0; i<height*width; i++)  // VECTORIZADO
+        for (int i=0; i<height*width; i++)  // VECTORIZADO CON PEELING
         {
             /* R */
             Ypixels[i] = (unsigned char) 
@@ -273,14 +273,14 @@ convertRGB2YCbCr_block(image_t * image_in, image_t * image_out)
         for (int i=0; i<3*height*width; i += 3*BLOCK)
         {
             /* transformación AoS -> SoA */
-            for (int j=0; j<BLOCK; j++)
+            for (int j=0; j<BLOCK; j++)     // VECTORIZADO
             {
                 Rpixels[j] = image_in->pixels[i + 3*j + 0];
                 Gpixels[j] = image_in->pixels[i + 3*j + 1];
                 Bpixels[j] = image_in->pixels[i + 3*j + 2];
             }
             /* conversión RGB -> YbCrCb */
-            for (int j=0; j<BLOCK; j++)
+            for (int j=0; j<BLOCK; j++)     // VECTORIZADO
             {
                 /* R */
                 Ypixels[j] = (unsigned char) 
