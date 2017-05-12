@@ -30,10 +30,12 @@ PROGRAM PI_F90
       subinterval = 1.0 / nsubintervals;
       area = 0.0;
   
+!$OMP PARALLEL DO REDUCTION(+:area)
       DO i = 1,nsubintervals
          x = (i-0.5)*subinterval;
          area = area + 4.0/(1.0 + x*x);
       ENDDO
+!$OMP END PARALLEL DO
 
       pi = subinterval*area;
 
