@@ -5,19 +5,19 @@ PROGRAM PI_OMP
       integer i, count1, count2, cr
       !! real(8) wtime1, wtime2
       real(8) wtr, tth1, tth2
-      real(8) omp_get_wtick, omp_get_wtime		! funciones
-      integer omp_get_max_threads, omp_get_num_procs	! funciones
-      integer omp_get_num_threads, omp_get_thread_num	! funciones
-      integer omp_set_dynamic, omp_get_dynamic		! funciones
-      integer nprocsOMP, nthreadsOMP		! variables
-      integer maxnthreadsOMP, threadID		! variables
-      real etime, dtime				! funciones
-      real t1, t2, tarray1(2), tarray2(2)	! variables
+      real(8) omp_get_wtick, omp_get_wtime            ! funciones
+      integer omp_get_max_threads, omp_get_num_procs  ! funciones
+      integer omp_get_num_threads, omp_get_thread_num ! funciones
+      integer omp_set_dynamic, omp_get_dynamic        ! funciones
+      integer nprocsOMP, nthreadsOMP            ! variables
+      integer maxnthreadsOMP, threadID          ! variables
+      real etime, dtime                   ! funciones
+      real t1, t2, tarray1(2), tarray2(2) ! variables
 
       maxnthreadsOMP = omp_get_max_threads()
       nprocsOMP = omp_get_num_procs()
       call system_clock(count_rate = cr)  ! resolucion system_clock() en Hz
-      wtr = omp_get_wtick()		  ! resolucion omp_get_wtime() en segundos
+      wtr = omp_get_wtick()           ! resolucion omp_get_wtime() en segundos
   
       !! CALL OMP_SET_DYNAMIC(.TRUE.)
   
@@ -78,7 +78,7 @@ PROGRAM PI_OMP
       print *,"- Threads utilizados (omp_get_num_threads):", nthreadsOMP
       print *, " "
   
-      print *,"*** tiempos ***"      	 
+      print *,"*** tiempos ***"            
       ! print *,"omp_get_wtime = ", wtime2-wtime1, " sg"
       print *,"system_clock =", (count2-count1)/1e6," sg"
       print *,"dtime =", t1," sg"

@@ -5,8 +5,8 @@ PROGRAM PI_G4
       real(8) varea(4)
       integer i
       integer count1, count2, cr
-      real etime, dtime				! funciones
-      real t1, t2, tarray1(2), tarray2(2)	! variables
+      real etime, dtime                         ! funciones
+      real t1, t2, tarray1(2), tarray2(2)       ! variables
 
       call system_clock(count_rate = cr)  ! resolucion system_clock()
 
@@ -65,7 +65,7 @@ PROGRAM PI_G4
       print *,"***************************************"
       print *, " "
 
-      print *,"*** tiempos ***"      	 
+      print *,"*** tiempos ***"          
       print *,"system_clock =", (count2-count1)/1e6," sg"
       print *,"dtime =", t1," sg"
       print *,"etime =", t2," sg"

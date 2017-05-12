@@ -44,7 +44,7 @@ PROGRAM PI_SERIE
       print *,"***************************************"
       print *, " "
 
-      print *,"*** tiempos ***"      	 
+      print *,"*** tiempos ***"            
       print *,"system_clock =", (count2-count1)/1e6," sg"
       print *,"dtime =", t1," sg"
       print *,"etime =", t2," sg"

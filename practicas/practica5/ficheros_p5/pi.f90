@@ -3,8 +3,8 @@ PROGRAM PI_F90
       real(8), PARAMETER:: nsubintervals=100000000
       real(8) x, pi, area, subinterval
       integer i, count1, count2, cr
-      integer num_procs, num_threads	! funciones
-      integer nprocs, nthreads		! variables
+      integer num_procs, num_threads      ! funciones
+      integer nprocs, nthreads            ! variables
       real etime, dtime
       real t1, t2, tarray1(2), tarray2(2)
   
@@ -51,8 +51,8 @@ PROGRAM PI_F90
   
       ! print *,"- Threads utilizados (num_threads)", nthreads
       ! print *, " "
-        	 
-      print *,"*** tiempos ***"      	 
+             
+      print *,"*** tiempos ***"            
       print *,"system_clock =", (count2-count1)/1e6," sg"
       print *,"dtime =", t1," sg"
       print *,"etime =", t2," sg"
